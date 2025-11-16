@@ -72,8 +72,9 @@ class LeatherBedBlockBehavior(block: CustomBlock) : InteractiveSurface(block) {
         val itemId = CraftEngineItems.getCustomItemId(item)
         val isRawLeather = itemId != null && itemId.value().startsWith("animal_leather_raw_")
         val isCuredLeather = itemId != null && itemId.value().startsWith("animal_leather_cured_")
+        val isProcessedLeather = itemId != null && itemId.value().startsWith("animal_leather_") && !itemId.value().startsWith("animal_leather_raw_")
 
-        return isRawLeather || isCuredLeather || item.type == Material.LEATHER
+        return isRawLeather || isCuredLeather || isProcessedLeather
     }
 
     override fun calculatePlacement(player: Player, itemCount: Int): Vector3f {
@@ -160,9 +161,12 @@ class LeatherBedBlockBehavior(block: CustomBlock) : InteractiveSurface(block) {
         val workstationData = WorkstationDataManager.getWorkstationData(pos, "leather_bed")
         val currentItem = workstationData.placedItems.lastOrNull()
 
-        // Verify we have vanilla leather to cure
-        if (currentItem == null || currentItem.item.type != Material.LEATHER) {
-            Atom.instance.logger.info("StartStabilization: No vanilla leather found at $pos")
+        // Verify we have processed leather to cure
+        val itemId = CraftEngineItems.getCustomItemId(currentItem.item)
+        val isProcessedLeather = itemId != null && itemId.value().startsWith("animal_leather_") && !itemId.value().startsWith("animal_leather_raw_")
+        
+        if (currentItem == null || !isProcessedLeather) {
+            Atom.instance.logger.info("StartStabilization: No processed leather found at $pos")
             return
         }
 
@@ -191,7 +195,10 @@ class LeatherBedBlockBehavior(block: CustomBlock) : InteractiveSurface(block) {
             val updatedData = WorkstationDataManager.getWorkstationData(pos, "leather_bed")
             val oldLeatherItem = updatedData.placedItems.lastOrNull()
 
-            if (oldLeatherItem != null && oldLeatherItem.item.type == Material.LEATHER) {
+            val oldItemId = CraftEngineItems.getCustomItemId(oldLeatherItem.item)
+            val isOldProcessedLeather = oldItemId != null && oldItemId.value().startsWith("animal_leather_") && !oldItemId.value().startsWith("animal_leather_raw_")
+            
+            if (oldLeatherItem != null && isOldProcessedLeather) {
                 Atom.instance.logger.info("Completing leather stabilization at $pos")
 
                 // Create cured leather
@@ -276,7 +283,10 @@ fun LeatherBedBlockBehavior.Companion.accelerateCuring(pos: BlockPos): Boolean {
 
     Atom.instance.logger.info("Accelerating cure at $pos, item type: ${oldLeatherItem?.item?.type}")
 
-    if (oldLeatherItem != null && oldLeatherItem.item.type == Material.LEATHER) {
+    val oldItemId = CraftEngineItems.getCustomItemId(oldLeatherItem.item)
+    val isOldProcessedLeather = oldItemId != null && oldItemId.value().startsWith("animal_leather_") && !oldItemId.value().startsWith("animal_leather_raw_")
+    
+    if (oldLeatherItem != null && isOldProcessedLeather) {
         // Create cured leather
         val animals = listOf(
             "cow", "pig", "sheep", "chicken", "rabbit", "horse", "donkey", "mule",
@@ -376,7 +386,10 @@ fun LeatherBedBlockBehavior.Companion.resumeCuringProcesses() {
                     val updatedData = WorkstationDataManager.getWorkstationData(pos, "leather_bed")
                     val oldLeatherItem = updatedData.placedItems.lastOrNull()
 
-                    if (oldLeatherItem != null && oldLeatherItem.item.type == Material.LEATHER) {
+                    val oldItemId = CraftEngineItems.getCustomItemId(oldLeatherItem.item)
+                    val isOldProcessedLeather = oldItemId != null && oldItemId.value().startsWith("animal_leather_") && !oldItemId.value().startsWith("animal_leather_raw_")
+                    
+                    if (oldLeatherItem != null && isOldProcessedLeather) {
                         completeCuring(pos, updatedData, oldLeatherItem)
                     }
 
@@ -390,7 +403,10 @@ fun LeatherBedBlockBehavior.Companion.resumeCuringProcesses() {
             } else {
                 Atom.instance.logger.info("Completing overdue curing at $pos")
                 val oldLeatherItem = data.placedItems.lastOrNull()
-                if (oldLeatherItem != null && oldLeatherItem.item.type == Material.LEATHER) {
+                val oldItemId = CraftEngineItems.getCustomItemId(oldLeatherItem.item)
+                val isOldProcessedLeather = oldItemId != null && oldItemId.value().startsWith("animal_leather_") && !oldItemId.value().startsWith("animal_leather_raw_")
+                
+                if (oldLeatherItem != null && isOldProcessedLeather) {
                     completeCuring(pos, data, oldLeatherItem)
                 }
                 data.curingStartTime = null
