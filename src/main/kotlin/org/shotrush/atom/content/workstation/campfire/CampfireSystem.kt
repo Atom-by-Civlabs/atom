@@ -1,4 +1,4 @@
-package org.shotrush.atom.content.workstation.campfire
+ package org.shotrush.atom.content.workstation.campfire
 
 import com.github.shynixn.mccoroutine.folia.launch
 import com.github.shynixn.mccoroutine.folia.regionDispatcher
@@ -8,6 +8,7 @@ import org.bukkit.Location
 import org.bukkit.Material
 import org.bukkit.Particle
 import org.bukkit.Sound
+import org.bukkit.Tag
 import org.bukkit.block.data.Lightable
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -78,20 +79,24 @@ class CampfireSystem(private val plugin: Plugin) : Listener {
         val player = event.player
         val item = player.inventory.itemInMainHand
 
-        // Straw fuel add when lit
-        if (item.matches("atom:straw") && data.isLit) {
-            event.isCancelled = true
-            val end = straw.tryAddStrawFuel(registry, block.location)
-            if (end != null) {
+        // Fuel add when lit
+        if (data.isLit) {
+            val fuelResult = straw.tryAddFuel(registry, block.location, item)
+
+            if (fuelResult != null) {
+                event.isCancelled = true
+                val (end, fuelName) = fuelResult
                 item.subtract(1)
                 val remaining = (end - System.currentTimeMillis()).coerceAtLeast(0)
                 val min = (remaining / 60000L).toInt()
                 val sec = ((remaining % 60000L) / 1000L).toInt()
-                ActionBarManager.send(player, "campfire", "<green>Added fuel! Time remaining:</green> <yellow>${min}m ${sec}s</yellow>")
-            } else {
-                ActionBarManager.send(player, "campfire","<red>Could not add fuel.</red>")
+                ActionBarManager.send(player, "campfire", "<green>Added $fuelName! Time remaining:</green> <yellow>${min}m ${sec}s</yellow>")
+                return
+            } else if (item.matches("atom:straw") || Tag.LOGS.isTagged(item.type) || item.type == Material.COAL || item.type == Material.CHARCOAL) {
+                event.isCancelled = true
+                ActionBarManager.send(player, "campfire","<red>Could not add fuel - campfire is fully fueled (max ${StrawFuelFeature.MAX_FUEL_SLOTS} fuel slots).</red>")
+                return
             }
-            return
         }
 
         // Lighting with pebble when unlit
