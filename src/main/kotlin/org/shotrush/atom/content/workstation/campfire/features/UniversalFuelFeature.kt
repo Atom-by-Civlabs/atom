@@ -133,10 +133,7 @@ class UniversalFuelFeature : CampfireRegistry.Listener {
         if (hasChanges) {
             persistFuelQueue(loc)
             
-            // If queue is now empty, extinguish the campfire
-            if (queue.isEmpty()) {
-                registry.extinguishAt(loc, "fuel_queue_empty")
-            }
+            // Let the registry's burnout timer handle extinguishing, don't force it here
         }
     }
 
