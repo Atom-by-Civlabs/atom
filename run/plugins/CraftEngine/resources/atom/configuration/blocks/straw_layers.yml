@@ -12,6 +12,9 @@ items:
         - <!i><dark_gray><l10n:item.straw.lore_4>
         - ""
         - <!i><white><image:atom:badge_material> <image:atom:badge_age_foraging>
+      components:
+        custom_data:
+          campfire_burn_time_seconds: 90
     model:
       template: default:model/simplified_generated
       arguments:

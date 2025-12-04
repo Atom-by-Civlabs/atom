@@ -77,14 +77,10 @@ class UniversalFuelFeature : CampfireRegistry.Listener {
                 }
             }
         } catch (e: Exception) {
-            // If component reading fails, fall back to legacy logic
+            // If component reading fails, return null
         }
 
-        // Fallback: legacy items that don't have the component yet
-        return when {
-            item.matches("atom:straw") -> 90
-            else -> null
-        }
+        return null
     }
 
     override fun onCampfireExtinguished(state: CampfireRegistry.CampfireState, reason: String) {
