@@ -3,10 +3,11 @@ package org.shotrush.atom.content.workstation.campfire.features
 import org.bukkit.Location
 import org.bukkit.Particle
 import org.bukkit.Sound
+import org.shotrush.atom.content.workstation.campfire.CampfireData
 import org.shotrush.atom.content.workstation.campfire.CampfireRegistry
 
 class BurnoutFeature : CampfireRegistry.Listener {
-    override fun onCampfireExtinguished(state: CampfireRegistry.CampfireState, reason: String) {
+    override fun onCampfireExtinguished(state: CampfireData.CampfireState, reason: String) {
         playEffects(state.location)
     }
 

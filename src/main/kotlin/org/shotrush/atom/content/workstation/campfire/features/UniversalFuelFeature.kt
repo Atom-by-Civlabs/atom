@@ -1,101 +1,89 @@
 package org.shotrush.atom.content.workstation.campfire.features
 
-import net.momirealms.craftengine.bukkit.api.CraftEngineItems
 import net.momirealms.craftengine.bukkit.item.DataComponentTypes
-import net.momirealms.craftengine.core.item.ItemManager
 import net.momirealms.craftengine.core.plugin.CraftEngine
 import net.momirealms.craftengine.libraries.nbt.CompoundTag
 import net.momirealms.craftengine.libraries.nbt.NumericTag
 import org.bukkit.Location
-import org.bukkit.Material
-import org.bukkit.NamespacedKey
-import org.bukkit.block.Campfire
 import org.bukkit.inventory.ItemStack
-import org.bukkit.persistence.PersistentDataType
+import org.shotrush.atom.content.workstation.campfire.CampfireData
 import org.shotrush.atom.content.workstation.campfire.CampfireRegistry
-import org.shotrush.atom.matches
 
 /**
- * Modern fuel system that uses data components to determine burn time.
- * Supports any item with a campfire burn time component, allowing for different fuel types.
- * Implements a queue system (max 4 items) without visual item displays.
+ * Fuel system that uses CraftEngine's custom_data component to determine burn time.
+ * Items with `campfire_burn_time_seconds` in their custom_data can be used as fuel.
+ * 
+ * Fuel queue is stored in the block's PDC (PersistentDataContainer).
  */
 class UniversalFuelFeature : CampfireRegistry.Listener {
 
-    // Queue of fuel items waiting to be consumed, limited to 4 items
-    private val fuelQueues = mutableMapOf<Location, MutableList<QueuedFuel>>()
-    
+    companion object {
+        private const val MAX_QUEUE_SIZE = 4
+        private const val BURN_TIME_KEY = "campfire_burn_time_seconds"
+    }
+
     data class QueuedFuel(
         val burnTimeSeconds: Int,
         val addedAt: Long
     )
+
+    // In-memory cache of fuel queues (restored from PDC on resume)
+    private val fuelQueues = mutableMapOf<Location, MutableList<QueuedFuel>>()
 
     /**
      * Try to add fuel to the campfire from an item stack.
      * Returns the new end time in milliseconds if successful, null otherwise.
      */
     fun tryAddFuel(registry: CampfireRegistry, loc: Location, item: ItemStack): Long? {
-        val campfire = loc.block.state as? Campfire ?: return null
+        if (item.isEmpty) return null
 
-        // Get current queue or create new one
         val queue = fuelQueues.getOrPut(loc) { mutableListOf() }
+        if (queue.size >= MAX_QUEUE_SIZE) return null
 
-        // Check if queue is full (max 4 items)
-        if (queue.size >= 4) return null
-
-        // Extract burn time from item component
         val burnTimeSeconds = getBurnTimeFromItem(item) ?: return null
         val burnTimeMs = burnTimeSeconds * 1000L
 
-        // Add to queue
         queue.add(QueuedFuel(burnTimeSeconds, System.currentTimeMillis()))
         persistFuelQueue(loc)
 
-        // Call the registry to extend the campfire timer properly
-        val endTime = registry.addFuel(loc, burnTimeMs)
-        return endTime
+        return registry.addFuel(loc, burnTimeMs)
     }
 
     /**
-     * Extract burn time in seconds from an item's data component.
-     * Returns null if the item doesn't have a valid burn time component.
+     * Extract burn time in seconds from an item's custom_data component.
      */
     private fun getBurnTimeFromItem(item: ItemStack): Int? {
-        // Wrap the ItemStack in CraftEngine's Item wrapper
-        val wrappedItem = CraftEngine.instance().itemManager<ItemStack>().wrap(item)
+        if (item.isEmpty) return null
 
-        // Try to read from custom_data component
-        try {
+        return try {
+            val wrappedItem = CraftEngine.instance().itemManager<ItemStack>().wrap(item)
             val customData = wrappedItem.getSparrowNBTComponent(DataComponentTypes.CUSTOM_DATA)
+            
             if (customData is CompoundTag) {
-                val burnTimeTag = customData.get("campfire_burn_time_seconds")
+                val burnTimeTag = customData.get(BURN_TIME_KEY)
                 if (burnTimeTag is NumericTag) {
                     val burnTime = burnTimeTag.asInt
-                    if (burnTime > 0) {
-                        return burnTime
-                    }
+                    if (burnTime > 0) return burnTime
                 }
             }
+            null
         } catch (e: Exception) {
-            // If component reading fails, return null
+            null
         }
-
-        return null
     }
 
-    override fun onCampfireExtinguished(state: CampfireRegistry.CampfireState, reason: String) {
-        // Clear the fuel queue when extinguished
+    override fun onCampfireExtinguished(state: CampfireData.CampfireState, reason: String) {
         fuelQueues.remove(state.location)
-        clearPersistence(state.location)
+        clearFuelQueuePersistence(state.location)
     }
 
-    override fun onCampfireBroken(state: CampfireRegistry.CampfireState) {
-        fuelQueues.remove(state.location)?.clear()
-        clearPersistence(state.location)
+    override fun onCampfireBroken(state: CampfireData.CampfireState) {
+        fuelQueues.remove(state.location)
+        // PDC is automatically cleared when block is broken
     }
 
-    override fun onResumeTimerScheduled(state: CampfireRegistry.CampfireState, remainingMs: Long) {
-        // On server restart, try to restore fuel queue
+    override fun onResumeTimerScheduled(state: CampfireData.CampfireState, remainingMs: Long) {
+        // Restore fuel queue from PDC
         val queue = loadFuelQueue(state.location)
         if (queue.isNotEmpty()) {
             fuelQueues[state.location] = queue.toMutableList()
@@ -103,89 +91,68 @@ class UniversalFuelFeature : CampfireRegistry.Listener {
     }
 
     /**
-     * Process the fuel queue, consuming items as time passes.
-     * Called periodically to manage fuel consumption.
+     * Process the fuel queue, removing consumed items.
      */
     fun processFuelQueue(loc: Location, registry: CampfireRegistry) {
         val queue = fuelQueues[loc] ?: return
         if (queue.isEmpty()) return
-        
+
         val now = System.currentTimeMillis()
         var hasChanges = false
-        
-        // Process queue from oldest to newest
+
         val iterator = queue.iterator()
         while (iterator.hasNext()) {
             val fuel = iterator.next()
             val elapsed = now - fuel.addedAt
-            
             if (elapsed >= fuel.burnTimeSeconds * 1000L) {
-                // This fuel item has been fully consumed
                 iterator.remove()
                 hasChanges = true
             }
         }
-        
+
         if (hasChanges) {
             persistFuelQueue(loc)
-            
-            // Let the registry's burnout timer handle extinguishing, don't force it here
         }
     }
 
-    /**
-     * Get the current fuel queue for display purposes.
-     */
-    fun getFuelQueue(loc: Location): List<QueuedFuel> {
-        return fuelQueues[loc]?.toList() ?: emptyList()
-    }
+    fun getFuelQueue(loc: Location): List<QueuedFuel> = fuelQueues[loc]?.toList() ?: emptyList()
+
+    fun isQueueFull(loc: Location): Boolean = (fuelQueues[loc]?.size ?: 0) >= MAX_QUEUE_SIZE
 
     /**
-     * Check if the fuel queue is full.
+     * Persist fuel queue to the block's PDC via CampfireData.
      */
-    fun isQueueFull(loc: Location): Boolean {
-        return (fuelQueues[loc]?.size ?: 0) >= 4
-    }
-
     private fun persistFuelQueue(loc: Location) {
-        val pos = net.momirealms.craftengine.core.world.BlockPos(loc.blockX, loc.blockY, loc.blockZ)
-        val data = org.shotrush.atom.content.workstation.core.WorkstationDataManager.getWorkstationData(pos, "campfire")
-        data.fuelQueue = fuelQueues[loc]?.map { "${it.burnTimeSeconds},${it.addedAt}" }?.joinToString(";") ?: ""
-    }
-
-    private fun loadFuelQueue(loc: Location): List<QueuedFuel> {
-        val pos = net.momirealms.craftengine.core.world.BlockPos(loc.blockX, loc.blockY, loc.blockZ)
-        val dataString = org.shotrush.atom.content.workstation.core.WorkstationDataManager.getAllWorkstations()
-            .values.find { it.position == pos }?.fuelQueue ?: return emptyList()
-        
-        return dataString.split(";").filter { it.isNotEmpty() }.map { entry ->
-            val parts = entry.split(",")
-            if (parts.size == 2) {
-                QueuedFuel(parts[0].toInt(), parts[1].toLong())
-            } else null
-        }.filterNotNull()
-    }
-
-    private fun clearPersistence(loc: Location) {
-        val pos = net.momirealms.craftengine.core.world.BlockPos(loc.blockX, loc.blockY, loc.blockZ)
-        val data = org.shotrush.atom.content.workstation.core.WorkstationDataManager.getWorkstationData(pos, "campfire")
-        data.fuelQueue = ""
+        val state = CampfireData.getState(loc) ?: return
+        state.fuelQueue = fuelQueues[loc]?.joinToString(";") { "${it.burnTimeSeconds},${it.addedAt}" } ?: ""
+        CampfireData.saveState(state)
     }
 
     /**
-     * Helper function to create an item with campfire burn time component.
-     * This can be used to create new fuel items with different burn times.
+     * Load fuel queue from PDC.
      */
-    companion object {
-        fun createFuelItem(baseItem: ItemStack, burnTimeSeconds: Int): ItemStack {
-            val item = baseItem.clone()
-            
-            // Use persistent data container like in Molds.kt
-            item.editPersistentDataContainer { container ->
-                container.set(NamespacedKey("atom", "campfire_burn_time_seconds"), PersistentDataType.STRING, burnTimeSeconds.toString())
+    private fun loadFuelQueue(loc: Location): List<QueuedFuel> {
+        val state = CampfireData.getState(loc) ?: return emptyList()
+        val dataString = state.fuelQueue
+        if (dataString.isEmpty()) return emptyList()
+
+        return dataString.split(";")
+            .filter { it.isNotEmpty() }
+            .mapNotNull { entry ->
+                val parts = entry.split(",")
+                if (parts.size == 2) {
+                    try {
+                        QueuedFuel(parts[0].toInt(), parts[1].toLong())
+                    } catch (e: NumberFormatException) {
+                        null
+                    }
+                } else null
             }
-            
-            return item
-        }
+    }
+
+    private fun clearFuelQueuePersistence(loc: Location) {
+        val state = CampfireData.getState(loc) ?: return
+        state.fuelQueue = ""
+        CampfireData.saveState(state)
     }
 }

@@ -197,16 +197,20 @@ class CampfireSystem(private val plugin: Plugin) : Listener {
     }
 
     init {
-
+        // Use global timer only for cleanup of in-memory cache (no block access)
         org.shotrush.atom.core.api.scheduler.SchedulerAPI.runGlobalTaskTimer({
-            registry.getAllStates().forEach { state ->
-                if (state.lit) {
-                    universalFuel.processFuelQueue(state.location, registry)
-                }
-            }
-
             val now = System.currentTimeMillis()
             recentFuelAdditions.entries.removeIf { now - it.value > 1000L }
+            
+            // Schedule fuel queue processing on each campfire's region thread
+            registry.getAllActiveLocations().forEach { location ->
+                org.bukkit.Bukkit.getServer().regionScheduler.run(plugin, location) { _ ->
+                    val state = registry.getState(location)
+                    if (state != null && state.lit) {
+                        universalFuel.processFuelQueue(location, registry)
+                    }
+                }
+            }
         }, 100L, 100L)
     }
 
