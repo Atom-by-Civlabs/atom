@@ -228,6 +228,7 @@ object PlayerMiningListener : Listener {
                 blockKey = blockKey
             )
         }
+        PlayerExhaustionListener.updateCurrentAction(PlayerAction.MINING, player)
     }
 
     // Simple feedback helper (actionbar + sound)
