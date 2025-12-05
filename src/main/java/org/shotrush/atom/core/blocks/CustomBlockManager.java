@@ -17,7 +17,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.reflections.Reflections;
 import org.shotrush.atom.Atom;
-import org.shotrush.atom.content.blocks.cog.CogManager;
+// import org.shotrush.atom.content.blocks.cog.CogManager; // DISABLED
 import org.shotrush.atom.core.blocks.annotation.AutoRegister;
 import org.shotrush.atom.core.data.PersistentData;
 import org.shotrush.atom.core.util.ActionBarManager;
@@ -151,8 +151,8 @@ public class CustomBlockManager implements Listener {
             plugin.getLogger().info("Spawned " + spawnedCount + " block(s) after world load");
 
 
-            CogManager cogManager = new CogManager(plugin);
-            cogManager.recalculatePower(blocks);
+            // CogManager cogManager = new CogManager(plugin);
+            // cogManager.recalculatePower(blocks);
         }, 20L);
 
     }

@@ -19,7 +19,7 @@ import org.shotrush.atom.core.util.ActionBarManager;
 
 ;
 
-@AutoRegister(priority = 10)
+// @AutoRegister(priority = 10) // DISABLED - legacy system
 public class Cog extends CustomBlock {
     @Getter
     private boolean isPowerSource;
