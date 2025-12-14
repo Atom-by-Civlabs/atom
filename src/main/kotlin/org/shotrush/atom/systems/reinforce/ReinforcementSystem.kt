@@ -35,9 +35,6 @@ object ReinforcementSystem : AtomListener {
         eventDef<BlockBreakEvent> {
             Atom.instance.regionDispatcher(it.block.location)
         },
-        eventDef<PlayerInteractEvent> {
-            Atom.instance.regionDispatcher(it.player.location)
-        },
         eventDef<ChunkLoadEvent> {
             Atom.instance.regionDispatcher(it.world, it.chunk.x, it.chunk.z)
         },
