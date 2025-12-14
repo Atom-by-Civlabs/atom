@@ -43,11 +43,13 @@ recipes:
   atom:knapping_station:
     type: shaped
     pattern:
-      - B
       - A
+      - B
+      - C
     ingredients:
-      A: "#minecraft:logs"
+      A: "atom:sharpened_rock"
       B: "#atom:leather"
+      C: "#minecraft:logs"
     result:
       id: atom:knapping_station
       count: 1

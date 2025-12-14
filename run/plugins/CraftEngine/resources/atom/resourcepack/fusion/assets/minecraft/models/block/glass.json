@@ -1,0 +1,40 @@
+{
+	"format_version": "1.21.6",
+	"parent": "minecraft:block/cube_all",
+	"textures": {
+		"1": "block/glass",
+		"particle": "#1"
+	},
+	"elements": [
+		{
+			"from": [0, 0, 0],
+			"to": [16, 16, 16],
+			"faces": {
+				"north": {"uv": [0, 0, 16, 16], "texture": "#1", "cullface": "north"},
+				"east": {"uv": [0, 0, 16, 16], "texture": "#1", "cullface": "east"},
+				"south": {"uv": [0, 0, 16, 16], "texture": "#1", "cullface": "south"},
+				"west": {"uv": [0, 0, 16, 16], "texture": "#1", "cullface": "west"},
+				"up": {"uv": [0, 0, 16, 16], "texture": "#1", "cullface": "up"},
+				"down": {"uv": [0, 0, 16, 16], "texture": "#1", "cullface": "down"}
+			}
+		},
+		{
+			"from": [15.985, 15.985, 15.985],
+			"to": [-0.005, -0.005, -0.005],
+			"rotation": {"angle": 0, "axis": "y", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 15.99, 15.99], "rotation": 180, "texture": "#1", "cullface": "south"},
+				"east": {"uv": [0, 0, 15.99, 15.99], "rotation": 180, "texture": "#1", "cullface": "west"},
+				"south": {"uv": [0, 0, 15.99, 15.99], "rotation": 180, "texture": "#1", "cullface": "north"},
+				"west": {"uv": [0, 0, 15.99, 15.99], "rotation": 180, "texture": "#1", "cullface": "east"},
+				"up": {"uv": [0, 0, 15.99, 15.99], "rotation": 180, "texture": "#1", "cullface": "down"},
+				"down": {"uv": [0, 0, 15.99, 15.99], "rotation": 180, "texture": "#1", "cullface": "up"}
+			}
+		}
+	],
+	"loader": "fusion:model",
+	"type": "connecting",
+	"connections": {
+		"type": "is_same_block"
+	}
+}

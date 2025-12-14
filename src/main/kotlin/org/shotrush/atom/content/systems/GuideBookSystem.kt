@@ -1,9 +1,7 @@
 package org.shotrush.atom.content.systems
 
-import net.kyori.adventure.inventory.Book
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.NamedTextColor
-import net.kyori.adventure.text.format.TextDecoration
+import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -17,15 +15,6 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.BookMeta
 import org.bukkit.plugin.Plugin
 import org.shotrush.atom.core.api.annotation.RegisterSystem
-import plutoproject.adventurekt.component
-import plutoproject.adventurekt.text.and
-import plutoproject.adventurekt.text.newline
-import plutoproject.adventurekt.text.style.bold
-import plutoproject.adventurekt.text.style.textBlack
-import plutoproject.adventurekt.text.style.textDarkGray
-import plutoproject.adventurekt.text.style.textDarkRed
-import plutoproject.adventurekt.text.text
-import plutoproject.adventurekt.text.with
 
 @RegisterSystem(
     id = "guide_book_system",
@@ -38,241 +27,215 @@ class GuideBookSystem(private val plugin: Plugin) : Listener {
     companion object {
         private const val GUIDE_TITLE = "Atom Survival Guide"
         private const val GUIDE_AUTHOR = "Atom Dev Team"
-        
+
+        private val mm: MiniMessage = MiniMessage.miniMessage()
+
+        private fun mmc(text: String): Component = mm.deserialize(text)
+
+        private fun nl(n: Int = 1): String = "<newline>".repeat(n)
+
         private fun createGuideBook(): ItemStack {
             val book = ItemStack(Material.WRITTEN_BOOK)
             val meta = book.itemMeta as BookMeta
-            
-            meta.title(Component.text(GUIDE_TITLE, NamedTextColor.GOLD))
-            meta.author(Component.text(GUIDE_AUTHOR, NamedTextColor.YELLOW))
+
+            // Title and author via MiniMessage to be consistent
+            meta.title(mmc("<gold>$GUIDE_TITLE</gold>"))
+            meta.author(mmc("<yellow>$GUIDE_AUTHOR</yellow>"))
             meta.generation = BookMeta.Generation.ORIGINAL
 
-            val p1 = component {
-                text("Welcome to Atom") with textDarkRed and bold
-                newline()
-                newline()
-                text("This world operates differently.") with textBlack
-                newline()
-                text("Survival requires understanding temperature, crafting, and metallurgy.") with textBlack
-                newline()
-                newline()
-                text("Read this guide carefully to survive.") with textDarkGray
-            }
+            val pWelcome = mmc(
+                buildString {
+                    append("<dark_red><bold>Welcome to Atom</bold></dark_red>")
+                    append(nl(2))
+                    append("<black>This world operates differently.</black>")
+                    append(nl())
+                    append(
+                        "<black>Survival requires understanding temperature, crafting, and metallurgy.</black>"
+                    )
+                    append(nl(2))
+                    append("<dark_gray>Read this guide carefully to survive.</dark_gray>")
+                }
+            )
 
-            // Page 2: Physicality
-            val p2 = Component.text()
-                .append(Component.text("Physical Limits", NamedTextColor.DARK_RED, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Your body is frail.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("- ", NamedTextColor.BLACK))
-                .append(Component.text("Movement", NamedTextColor.BLUE)).append(Component.text(" is 20% slower.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("- ", NamedTextColor.BLACK))
-                .append(Component.text("Mining", NamedTextColor.BLUE)).append(Component.text(" is 75% harder.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("- ", NamedTextColor.BLACK))
-                .append(Component.text("Combat", NamedTextColor.BLUE)).append(Component.text(" is exhausting.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Plan every action.", NamedTextColor.DARK_GRAY))
-                .build()
+            val pPhysical = mmc(
+                buildString {
+                    append("<dark_red><bold>Physical Limits</bold></dark_red>")
+                    append(nl(2))
+                    append("<black>Your body is frail.</black>")
+                    append(nl())
+                    append("<black>- <blue>Movement</blue> is 20% slower.</black>")
+                    append(nl())
+                    append("<black>- <blue>Mining</blue> is 75% harder.</black>")
+                    append(nl())
+                    append("<black>- <blue>Combat</blue> is exhausting.</black>")
+                    append(nl(2))
+                    append("<dark_gray>Plan every action.</dark_gray>")
+                }
+            )
 
-            // Page 3: Temperature
-            val p3 = Component.text()
-                .append(Component.text("Temperature", NamedTextColor.BLUE, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("- ", NamedTextColor.BLACK))
-                .append(Component.text("Sprinting", NamedTextColor.RED)).append(Component.text(" warms you.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("- ", NamedTextColor.BLACK))
-                .append(Component.text("Water/Rain", NamedTextColor.BLUE)).append(Component.text(" cools you down rapidly.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("- ", NamedTextColor.BLACK))
-                .append(Component.text("Campfires", NamedTextColor.GOLD)).append(Component.text(" dry and warm you.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Beware of hypothermia and heatstroke.", NamedTextColor.DARK_RED))
-                .build()
+            val pTemp = mmc(
+                buildString {
+                    append("<blue><bold>Temperature</bold></blue>")
+                    append(nl(2))
+                    append("<black>- <red>Sprinting</red> warms you.</black>")
+                    append(nl())
+                    append("<black>- <blue>Water/Rain</blue> cools you down rapidly.</black>")
+                    append(nl())
+                    append("<black>- <gold>Campfires</gold> dry and warm you.</black>")
+                    append(nl(2))
+                    append("<dark_red>Beware of hypothermia and heatstroke.</dark_red>")
+                }
+            )
 
-            // Page 4: Thirst
-            val p4 = Component.text()
-                .append(Component.text("Thirst & Water", NamedTextColor.AQUA, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Drinking ", NamedTextColor.BLACK))
-                .append(Component.text("Raw Water", NamedTextColor.DARK_GREEN))
-                .append(Component.text(" causes sickness (Hunger).", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Purification:", NamedTextColor.GOLD))
-                .append(Component.newline())
-                .append(Component.text("Boil a ", NamedTextColor.BLACK))
-                .append(Component.text("Water Bottle", NamedTextColor.WHITE))
-                .append(Component.text(" on a ", NamedTextColor.BLACK))
-                .append(Component.text("Campfire", NamedTextColor.GOLD))
-                .append(Component.text(" until hot.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("It becomes ", NamedTextColor.BLACK))
-                .append(Component.text("Purified Water", NamedTextColor.AQUA))
-                .append(Component.text(" (+Regen).", NamedTextColor.BLACK))
-                .build()
+            val pThirst = mmc(
+                buildString {
+                    append("<aqua><bold>Thirst & Water</bold></aqua>")
+                    append(nl(2))
+                    append("<black>Drinking </black><dark_green>Raw Water</dark_green><black> causes sickness (Hunger).</black>")
+                    append(nl(2))
+                    append("<gold>Purification:</gold>")
+                    append(nl())
+                    append("<black>Boil a </black><white>Water Bottle</white><black> on a </black><gold>Campfire</gold><black> until hot.</black>")
+                    append(nl())
+                    append("<black>It becomes </black><aqua>Purified Water</aqua><black> (+Regen).</black>")
+                }
+            )
 
-            // Page 5: Pebbles & Tools
-            val p5 = Component.text()
-                .append(Component.text("Early Tools", NamedTextColor.DARK_GREEN, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("1. Find ", NamedTextColor.BLACK))
-                .append(Component.text("Pebbles", NamedTextColor.GRAY))
-                .append(Component.text(" on the ground.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("2. Right-click a Pebble on ", NamedTextColor.BLACK))
-                .append(Component.text("Stone/Rock", NamedTextColor.DARK_GRAY))
-                .append(Component.text(" blocks repeatedly.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("3. Use ", NamedTextColor.BLACK))
-                .append(Component.text("Sharpened Rocks", NamedTextColor.GRAY))
-                .append(Component.text(" to craft basic tools.", NamedTextColor.BLACK))
-                .build()
+            val pTools = mmc(
+                buildString {
+                    append("<dark_green><bold>Early Tools</bold></dark_green>")
+                    append(nl(2))
+                    append("<black>1. Find </black><gray>Pebbles</gray><black> on the ground.</black>")
+                    append(nl())
+                    append("<black>2. Right-click a Pebble on </black><dark_gray>Stone/Rock</dark_gray><black> blocks repeatedly.</black>")
+                    append(nl())
+                    append("<black>3. Use </black><gray>Sharpened Rocks</gray><black> to craft basic tools.</black>")
+                }
+            )
 
-            // Page 6: Knapping & Ingredients
-            val p6 = Component.text()
-                .append(Component.text("Knapping", NamedTextColor.GOLD, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Use materials on the ", NamedTextColor.BLACK))
-                .append(Component.text("Knapping Station", NamedTextColor.DARK_AQUA))
-                .append(Component.text(".", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Ingredients:", NamedTextColor.DARK_GREEN))
-                .append(Component.newline())
-                .append(Component.text("1. ", NamedTextColor.BLACK))
-                .append(Component.text("Clay Ball", NamedTextColor.GRAY))
-                .append(Component.text(": Add clay to match pattern (Molds).", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("2. ", NamedTextColor.BLACK))
-                .append(Component.text("Pebble", NamedTextColor.GRAY))
-                .append(Component.text(": Remove stone to match pattern (Tools).", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("3. ", NamedTextColor.BLACK))
-                .append(Component.text("Honeycomb", NamedTextColor.GOLD))
-                .append(Component.text(": Wax Molds.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Check the ", NamedTextColor.BLACK))
-                .append(Component.text("Recipe Book", NamedTextColor.GREEN))
-                .append(Component.text(" in the station for patterns.", NamedTextColor.BLACK))
-                .build()
+            val pKnapping = mmc(
+                buildString {
+                    append("<gold><bold>Knapping</bold></gold>")
+                    append(nl(2))
+                    append("<black>Use materials on the </black><dark_aqua>Knapping Station</dark_aqua><black>.</black>")
+                    append(nl(2))
+                    append("<dark_green>Ingredients:</dark_green>")
+                    append(nl())
+                    append("<black>1. </black><gray>Clay Ball</gray><black>: Add clay to match pattern (Molds).</black>")
+                    append(nl())
+                    append("<black>2. </black><gray>Pebble</gray><black>: Remove stone to match pattern (Tools).</black>")
+                    append(nl())
+                    append("<black>3. </black><gold>Honeycomb</gold><black>: Wax Molds.</black>")
+                    append(nl(2))
+                    append("<black>Check the </black><green>Recipe Book</green><black> in the station for patterns.</black>")
+                }
+            )
 
-            // Page 7: Firing Molds
-            val p7 = Component.text()
-                .append(Component.text("Firing Molds", NamedTextColor.RED, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Unfired Clay Molds are useless.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Place the ", NamedTextColor.BLACK))
-                .append(Component.text("Unfired Mold", NamedTextColor.GRAY))
-                .append(Component.text(" directly onto a ", NamedTextColor.BLACK))
-                .append(Component.text("LIT Campfire", NamedTextColor.GOLD))
-                .append(Component.text(".", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("Wait 60s for it to fire.", NamedTextColor.DARK_GRAY))
-                .build()
+            val pRoomsIntro = mmc(
+                buildString {
+                    append("<gold><bold>Rooms</bold></gold>")
+                    append(nl(2))
+                    append("<black>Rooms are areas where air can move from block to block.</black>")
+                    append(nl(2))
+                    append("<black>If two blocks touch and their sides are open, air can pass, and they count as the same room.</black>")
+                }
+            )
 
-            // Page 8: Casting (Metallurgy)
-            val p8 = Component.text()
-                .append(Component.text("Casting", NamedTextColor.DARK_AQUA, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("1. Place a ", NamedTextColor.BLACK))
-                .append(Component.text("Clay Cauldron", NamedTextColor.GRAY))
-                .append(Component.text(" directly ABOVE a Lit Campfire.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("2. Add ", NamedTextColor.BLACK))
-                .append(Component.text("Raw Ore", NamedTextColor.GOLD))
-                .append(Component.text(" (Copper/Iron).", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("3. Wait for it to melt.", NamedTextColor.BLACK))
-                .build()
-            
-            // Page 9: Casting (Filling)
-            val p9 = Component.text()
-                .append(Component.text("Casting Cont.", NamedTextColor.DARK_AQUA, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("4. Right-click the cauldron with an ", NamedTextColor.BLACK))
-                .append(Component.text("Empty Fired Mold", NamedTextColor.RED))
-                .append(Component.text(" to fill it.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("5. ", NamedTextColor.BLACK))
-                .append(Component.text("Throw the filled mold", NamedTextColor.GOLD))
-                .append(Component.text(" on the ground.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("6. Wait 30 seconds for it to cool and break open.", NamedTextColor.BLACK))
-                .build()
+            val pRoomRules = mmc(
+                buildString {
+                    append("<gold><bold>Rooms: </bold></gold><dark_gray>Rules (Simple)</dark_gray>")
+                    append(nl(2))
+                    append("<black>• <dark_aqua>Doors</dark_aqua> & <dark_aqua>Trapdoors</dark_aqua> seal rooms completely, </black><gray>open or closed</gray><black>.</black>")
+                    append(nl())
+                    append("<black>• </black><dark_aqua>Full blocks</dark_aqua><black> (like <dark_aqua>stone</dark_aqua>) block air and split rooms.</black>")
+                    append(nl())
+                    append("<black>• <dark_aqua>Non-solid blocks</dark_aqua> (like <dark_aqua>slabs</dark_aqua>) can have open sides that let air through (depending on their shape).</black>")
+                }
+            )
 
-            // Page 10: Leather Working
-            val p10 = Component.text()
-                .append(Component.text("Leather Working", NamedTextColor.GOLD, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("1. Craft a ", NamedTextColor.BLACK))
-                .append(Component.text("Leather Bed", NamedTextColor.YELLOW))
-                .append(Component.text(".", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("2. Place ", NamedTextColor.BLACK))
-                .append(Component.text("Leather/Hide", NamedTextColor.GOLD))
-                .append(Component.text(" on it.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("3. Use a ", NamedTextColor.BLACK))
-                .append(Component.text("Sharpened Rock", NamedTextColor.GRAY))
-                .append(Component.text(" or ", NamedTextColor.BLACK))
-                .append(Component.text("Knife", NamedTextColor.GRAY))
-                .append(Component.text(" to scrape and process it.", NamedTextColor.BLACK))
-                .build()
+            val pRoomTips = mmc(
+                buildString {
+                    append("<gold><bold>Rooms: </bold></gold><dark_gray>Tips</dark_gray>")
+                    append(nl(2))
+                    append("<black>• Want a sealed room?</black> <gray>Use doors/trapdoors (they always seal) or fill openings with full blocks.</gray>")
+                    append(nl())
+                    append("<black>• Want rooms to connect?</black> <gray>Leave clear gaps or shape slabs/stairs so their open sides face the opening.</gray>")
+                }
+            )
 
-            // Page 11: Domestication
-            val p11 = Component.text()
-                .append(Component.text("Domestication", NamedTextColor.GREEN, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Animals are wild.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("Breeding animals increases their ", NamedTextColor.BLACK))
-                .append(Component.text("Domestication Level", NamedTextColor.GREEN))
-                .append(Component.text(".", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Level 5+", NamedTextColor.GOLD))
-                .append(Component.text(" animals are fully domesticated and will follow herd commands.", NamedTextColor.BLACK))
-                .build()
+            val pFiring = mmc(
+                buildString {
+                    append("<red><bold>Firing Molds</bold></red>")
+                    append(nl(2))
+                    append("<black>Unfired Clay Molds are useless.</black>")
+                    append(nl(2))
+                    append("<black>Place the </black><gray>Unfired Mold</gray><black> directly onto a </black><gold>LIT Campfire</gold><black>.</black>")
+                    append(nl())
+                    append("<dark_gray>Wait 60s for it to fire.</dark_gray>")
+                }
+            )
 
-            // Page 12: Mechanical Power
-            val p12 = Component.text()
-                .append(Component.text("Mechanics", NamedTextColor.GRAY, TextDecoration.BOLD))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("Use ", NamedTextColor.BLACK))
-                .append(Component.text("Cogs", NamedTextColor.GRAY))
-                .append(Component.text(" to transmit power.", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.newline())
-                .append(Component.text("To create a ", NamedTextColor.BLACK))
-                .append(Component.text("Power Source", NamedTextColor.RED))
-                .append(Component.text(":", NamedTextColor.BLACK))
-                .append(Component.newline())
-                .append(Component.text("Right-click a Cog with a ", NamedTextColor.BLACK))
-                .append(Component.text("Wrench", NamedTextColor.BLUE))
-                .append(Component.text(".", NamedTextColor.BLACK))
-                .build()
+            val pCasting = mmc(
+                buildString {
+                    append("<dark_aqua><bold>Casting</bold></dark_aqua>")
+                    append(nl(2))
+                    append("<black>1. Place a </black><gray>Clay Cauldron</gray><black> directly ABOVE a Lit Campfire.</black>")
+                    append(nl())
+                    append("<black>2. Add </black><gold>Raw Ore</gold><black> (Copper/Iron).</black>")
+                    append(nl())
+                    append("<black>3. Wait for it to melt.</black>")
+                }
+            )
 
-            meta.addPages(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12)
+            val pCasting2 = mmc(
+                buildString {
+                    append("<dark_aqua><bold>Casting Cont.</bold></dark_aqua>")
+                    append(nl(2))
+                    append("<black>4. Right-click the cauldron with an </black><red>Empty Fired Mold</red><black> to fill it.</black>")
+                    append(nl())
+                    append("<black>5. </black><gold>Throw the filled mold</gold><black> on the ground.</black>")
+                    append(nl())
+                    append("<black>6. Wait 30 seconds for it to cool and break open.</black>")
+                }
+            )
+
+            val pLeather = mmc(
+                buildString {
+                    append("<gold><bold>Leather Working</bold></gold>")
+                    append(nl(2))
+                    append("<black>1. Craft a </black><yellow>Leather Bed</yellow><black>.</black>")
+                    append(nl())
+                    append("<black>2. Place </black><gold>Leather/Hide</gold><black> on it.</black>")
+                    append(nl())
+                    append("<black>3. Use a </black><gray>Sharpened Rock</gray><black> or </black><gray>Knife</gray><black> to scrape and process it.</black>")
+                }
+            )
+
+            val pDomestication = mmc(
+                buildString {
+                    append("<green><bold>Domestication</bold></green>")
+                    append(nl(2))
+                    append("<black>Animals are wild.</black>")
+                    append(nl())
+                    append("<black>Breeding animals increases their </black><green>Domestication Level</green><black>.</black>")
+                    append(nl(2))
+                    append("<gold>Level 5+</gold><black> animals are fully domesticated and will follow herd commands.</black>")
+                }
+            )
+
+            val pMechanical = mmc(
+                buildString {
+                    append("<gray><bold>Mechanics</bold></gray>")
+                    append(nl(2))
+                    append("<black>Use </black><gray>Cogs</gray><black> to transmit power.</black>")
+                    append(nl(2))
+                    append("<black>To create a </black><red>Power Source</red><black>:</black>")
+                    append(nl())
+                    append("<black>Right-click a Cog with a </black><blue>Wrench</blue><black>.</black>")
+                }
+            )
+
+            meta.addPages(pWelcome, pPhysical, pTemp, pThirst, pTools, pKnapping, pRoomsIntro, pRoomRules, pRoomTips, pFiring, pCasting, pCasting2, pLeather, pDomestication, pMechanical)
             book.itemMeta = meta
             return book
         }
@@ -291,60 +254,50 @@ class GuideBookSystem(private val plugin: Plugin) : Listener {
     fun onRespawn(event: PlayerRespawnEvent) {
         ensureGuideBook(event.player)
     }
-    
-    // Prevent dropping the guide book
+
     @EventHandler
     fun onDrop(event: PlayerDropItemEvent) {
         val item = event.itemDrop.itemStack
         if (isGuideBook(item)) {
             event.isCancelled = true
-            event.player.sendMessage(Component.text("You cannot drop the guide book.", NamedTextColor.RED))
+            event.player.sendMessage(mmc("<red>You cannot drop the guide book.</red>"))
         }
     }
 
-    // Prevent moving the guide book to other inventories (chests, etc)
     @EventHandler
     fun onInventoryClick(event: InventoryClickEvent) {
         val item = event.currentItem ?: return
         if (isGuideBook(item)) {
-            // Allow moving in own inventory, but not to top inventory if it's not the player's crafting/inventory
             if (event.clickedInventory != event.whoClicked.inventory) {
-                // If they are trying to move it OUT of their inventory
-                 if (event.clickedInventory?.type != InventoryType.PLAYER) {
-                     // This logic is a bit simplistic, but 'unremoveable' usually implies "keep it on you"
-                     // We simply cancel if they try to put it into a chest/container
-                     if (event.clickedInventory != null && event.clickedInventory!!.type != InventoryType.PLAYER && event.clickedInventory!!.type != InventoryType.CRAFTING) {
-                         event.isCancelled = true
-                     }
-                 }
+                if (event.clickedInventory?.type != InventoryType.PLAYER) {
+                    if (
+                        event.clickedInventory != null &&
+                        event.clickedInventory!!.type != InventoryType.PLAYER &&
+                        event.clickedInventory!!.type != InventoryType.CRAFTING
+                    ) {
+                        event.isCancelled = true
+                    }
+                }
             }
-            
-            // Also block shift-clicking into other inventories
             if (event.isShiftClick && event.view.topInventory.type != InventoryType.CRAFTING) {
-                 event.isCancelled = true
+                event.isCancelled = true
             }
         }
     }
 
     private fun ensureGuideBook(player: Player) {
         val inventory = player.inventory
-        
-        // Check if player already has the book
         for (item in inventory.contents) {
-            if (item != null && isGuideBook(item)) {
-                return
-            }
+            if (item != null && isGuideBook(item)) return
         }
-        
-        // Give book
         inventory.addItem(createGuideBook())
-        player.sendMessage(Component.text("You have received the Atom Survival Guide.", NamedTextColor.GREEN))
+        player.sendMessage(mmc("<green>You have received the Atom Survival Guide.</green>"))
     }
 
     private fun isGuideBook(item: ItemStack): Boolean {
         if (item.type != Material.WRITTEN_BOOK) return false
         val meta = item.itemMeta as? BookMeta ?: return false
-        return meta.title() == Component.text(GUIDE_TITLE, NamedTextColor.GOLD) && 
-               meta.author() == Component.text(GUIDE_AUTHOR, NamedTextColor.YELLOW)
+        return meta.title() == mmc("<gold>$GUIDE_TITLE</gold>") &&
+                meta.author() == mmc("<yellow>$GUIDE_AUTHOR</yellow>")
     }
 }

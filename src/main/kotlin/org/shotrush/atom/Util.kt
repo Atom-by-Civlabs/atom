@@ -18,7 +18,7 @@ import org.bukkit.World
 import org.bukkit.block.Block
 import org.bukkit.inventory.ItemStack
 import org.shotrush.atom.api.BlockRef
-import org.shotrush.atom.api.ItemRef
+import org.shotrush.atom.api.SingleItemRef
 import org.shotrush.atom.item.isItem
 import org.shotrush.atom.util.Key
 import org.shotrush.atom.util.asAtomKey
@@ -26,7 +26,7 @@ import kotlin.jvm.optionals.getOrElse
 import kotlin.time.Duration
 import net.momirealms.craftengine.core.util.Key as CEKey
 
-fun ItemStack.isCustomItem() = CraftEngineItems.isCustomItem(this)
+fun ItemStack.isCustomItem() = CraftEngineItems.isCustomItem(this) && CraftEngineItems.getCustomItemId(this) != null
 fun ItemStack.getNamespacedKey(): String = if (isCustomItem()) {
     CraftEngineItems.getCustomItemId(this)?.toString() ?: type.key.toString()
 } else {
@@ -46,8 +46,8 @@ fun ItemStack.matches(key: String) = getNamespacedKey() == key
 fun ItemStack.matches(namespace: String, path: String) = getNamespacedKey() == "$namespace:$path"
 fun ItemStack.matches(item: CustomItem<ItemStack>) = item.isItem(this)
 
-fun ItemStack.asReference() = CraftEngineItems.getCustomItemId(this)?.let { ItemRef.custom(it.asAtomKey()) }
-    ?: ItemRef.MaterialRef(type)
+fun ItemStack.asReference() = CraftEngineItems.getCustomItemId(this)?.let { SingleItemRef.keyed(it.asAtomKey()) }
+    ?: SingleItemRef.MaterialRef(type)
 
 fun Block.getNamespacedKey(): String = if (CraftEngineBlocks.isCustomBlock(this)) {
     CraftEngineBlocks.getCustomBlockState(this)?.owner()?.value()?.id()?.toString() ?: type.key.toString()

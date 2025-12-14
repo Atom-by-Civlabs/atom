@@ -23,6 +23,7 @@ import org.shotrush.atom.core.blocks.CustomBlockManager
 import org.shotrush.atom.core.items.CustomItemRegistry
 import org.shotrush.atom.core.storage.DataStorage
 import org.shotrush.atom.listener.EventListeners
+import org.shotrush.atom.systems.reinforce.ReinforcementSystem
 import org.shotrush.atom.systems.room.RoomRegistry
 
 class Atom : SuspendingJavaPlugin() {
@@ -75,6 +76,8 @@ class Atom : SuspendingJavaPlugin() {
         EventListeners.register(this)
 
         setupCommands()
+
+        ReinforcementSystem.start()
         logger.info("Atom plugin has been enabled!")
     }
 
@@ -95,6 +98,7 @@ class Atom : SuspendingJavaPlugin() {
     }
 
     override fun onDisable() {
+        ReinforcementSystem.stop()
         CommandAPI.onDisable()
         RoomRegistry.saveAllToDisk()
         saveAllPlayerData()

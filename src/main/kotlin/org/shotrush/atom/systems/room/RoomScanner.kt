@@ -1,26 +1,30 @@
 package org.shotrush.atom.systems.room
 
 import com.github.shynixn.mccoroutine.folia.ticks
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import org.bukkit.World
 import org.joml.Vector3i
 import kotlin.random.Random
 
 object RoomScanner {
-    suspend fun scanAt(world: World, start: Vector3i, maxVolume: Int = 800, retries: Int = 0): Room? {
+    suspend fun scanAt(
+        world: World,
+        start: Vector3i,
+        maxVolume: Int = 800,
+        retries: Int = 1,
+        scanner: RoomScan = RoomScanFace(world, start, maxVolume = maxVolume),
+    ): Room? {
         repeat(retries + 1) { attempt ->
-            val scan = RoomScan(world, start, maxVolume = maxVolume)
-            val ok = scan.scan()
+            val ok = withContext(Dispatchers.IO) {
+                scanner.scan()
+            }
             if (ok) {
-                val room = scan.toRoomOrNull() ?: return null
-                // Dedup on commit to avoid duplicates if another scan completed meanwhile
-                return if (RoomRegistry.tryRegisterDedup(room)) {
-                    room
-                } else {
-                    null
-                }
+                val room = scanner.toRoom() ?: return null
+                return if (RoomRegistry.tryRegisterDedup(room)) room else null
             } else if (attempt < retries) {
-                delay((4 + Random.nextInt(5)).ticks) // 4–8 ticks backoff
+                delay((4..12).random().ticks)
             }
         }
         return null

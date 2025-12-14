@@ -1,4 +1,4 @@
-package org.shotrush.atom.systems.gravity
+package org.shotrush.atom.systems.physics
 
 import org.shotrush.atom.listener.AtomListener
 import org.shotrush.atom.listener.EventClass
