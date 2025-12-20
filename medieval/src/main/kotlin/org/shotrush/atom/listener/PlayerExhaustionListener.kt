@@ -18,6 +18,8 @@ import org.bukkit.event.player.PlayerFishEvent
 import org.bukkit.event.player.PlayerInteractEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
+import org.civlabs.atom.core.listener.AtomListener
+import org.civlabs.atom.core.listener.eventDef
 
 import org.shotrush.atom.Atom
 import java.util.UUID
@@ -42,19 +44,14 @@ data class ExhaustionData(
     }
 }
 
-object PlayerExhaustionListener : Listener {
-    private val playerExhaustionData = mutableMapOf<UUID, ExhaustionData>()
-    fun register(atom: Atom) {
-        val eventDispatcher = mapOf(
-            eventDef<BlockBreakEvent> { atom.regionDispatcher(it.block.location) },
-            eventDef<CraftItemEvent> { atom.entityDispatcher(it.whoClicked)},
-            eventDef<PlayerFishEvent> { atom.entityDispatcher(it.player)},
-            eventDef<PlayerInteractEvent> { atom.entityDispatcher(it.player) }
+object PlayerExhaustionListener : AtomListener {
+    override val eventDefs  = mapOf(
+            eventDef<BlockBreakEvent> { Atom.instance.regionDispatcher(it.block.location) },
+            eventDef<CraftItemEvent> { Atom.instance.entityDispatcher(it.whoClicked)},
+            eventDef<PlayerFishEvent> { Atom.instance.entityDispatcher(it.player)},
+            eventDef<PlayerInteractEvent> { Atom.instance.entityDispatcher(it.player) }
         )
-        atom.server.pluginManager.registerSuspendingEvents(this, atom, eventDispatcher)
-    }
-    val ACTION_REPETITION_KEY = NamespacedKey("atom", "action_repetition") // might need a better name
-    val LAST_ACTION_KEY = NamespacedKey("atom", "last_action")
+    private val playerExhaustionData = mutableMapOf<UUID, ExhaustionData>()
 
     private fun isFarmingTool(item: ItemStack): Boolean {
         return Tag.ITEMS_HOES.isTagged(item.type) || when (item.type) {
@@ -126,7 +123,6 @@ object PlayerExhaustionListener : Listener {
             player.damage(1.0)
             return
         }
-        player.sendMessage("Exhaustion applied")
 
        // if (player.saturation > 0) {
        //     player.saturation = max(0f, player.saturation - 0.5f)

@@ -7,6 +7,7 @@ import org.bukkit.entity.Projectile
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.entity.EntityDamageByEntityEvent
+import org.civlabs.atom.core.listener.eventDef
 import org.shotrush.atom.Atom
 import org.shotrush.atom.core.util.ActionBarManager
 

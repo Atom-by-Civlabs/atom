@@ -11,8 +11,10 @@ object EventListeners {
         PlayerDataTrackingListener.register(atom)
         PlayerMiningListener.register(atom)
         RecipeUnlockHandler.register(atom)
+        CombatListener.register(atom)
 //        PlayerChatListener.register(this)
         ReinforcementSystem.register()
         BlockBreakSystem.register()
+        PlayerExhaustionListener.register()
     }
 }
