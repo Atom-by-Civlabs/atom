@@ -230,11 +230,14 @@ public class ThirstSystem implements Listener {
     public void addThirst(Player player, int amount) {
         UUID playerId = player.getUniqueId();
         double currentThirst = thirstLevels.getOrDefault(playerId, MAX_THIRST);
-        double newThirst = Math.min(currentThirst + amount, MAX_THIRST);
-        thirstLevels.put(playerId, newThirst);
+        setThirst(player, currentThirst + amount);
+    }
+
+    public void setThirst(Player player, double amount) {
+        thirstLevels.put(player.getUniqueId(), Math.clamp(amount, 0, MAX_THIRST));
         updateThirstDisplay(player);
     }
-    
+
     public int getThirst(Player player) {
         return (int) Math.ceil(thirstLevels.getOrDefault(player.getUniqueId(), MAX_THIRST));
     }

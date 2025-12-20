@@ -119,3 +119,8 @@ runs/
 .kotlin/
 
 exp/
+core/run/
+core/bin/
+medieval/bin/
+medieval/run/
+.settings/org.eclipse.buildship.core.prefs
