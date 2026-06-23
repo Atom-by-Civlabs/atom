@@ -22,6 +22,13 @@ import org.shotrush.atom.core.api.player.PlayerDataAPI
 import org.shotrush.atom.core.blocks.CustomBlockManager
 import org.shotrush.atom.core.items.CustomItemRegistry
 import org.shotrush.atom.core.storage.DataStorage
+import org.shotrush.atom.core.workstations.WorkstationManager
+import org.shotrush.atom.listener.CombatListener
+import org.shotrush.atom.listener.PlayerDataTrackingListener
+import org.shotrush.atom.listener.PlayerMiningListener
+import org.shotrush.atom.listener.RecipeUnlockHandler
+import org.shotrush.atom.listener.TestListener
+import org.shotrush.atom.listener.PlayerExhaustionListener
 import org.shotrush.atom.listener.EventListeners
 import org.shotrush.atom.systems.reinforce.ReinforcementSystem
 
